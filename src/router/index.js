@@ -14,7 +14,7 @@ export default new Router({
       component: ContentCards
     },
     {
-      path: '/auth/:modePage',
+      path: '/Auth/:modePage',
       name: 'Auth',
       component: Auth
     },
@@ -24,7 +24,7 @@ export default new Router({
     },
     {
       path: '*',
-      redirect: '/'
+      redirect: {name: 'Content'}
     },
   ]
 })

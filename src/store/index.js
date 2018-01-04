@@ -8,16 +8,27 @@ export default new Vuex.Store({
     modePage: '',
 
     userData: {
+      headerEmail: 'Anonymous@mail.ru',
       loginSuccess: false,
-      login: 'Anonymous',
-      raiting: 0
-    }
+      uidUser: false,
+      countCards: 0,
+    },
 
+    animated: {
+      run: true,
+      textBanner: '321'
+    }
 
   },
   mutations: {
     setModePage(state, strValue) {
       state.modePage = strValue;
+    },
+    setUserData(state, objDataUser) {
+      state.userData = objDataUser;
+    },
+    setAnimation(state, objData) {
+      state.animated = objData;
     }
   }
 });
