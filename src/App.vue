@@ -14,18 +14,19 @@
       </router-link>
 
       <router-link :to="{name: 'Content'}" class="btn btn-outline-success btn-router" tag="button" >
-        Главная
+        <i class="fa fa-home" aria-hidden="true"></i>
+        <span class="text-router">Главная</span>
       </router-link>
 
       <!--<form class="form-inline">-->
-        <!--<label class="my-1 mr-2 text-blue" for="inlineFormCustomSelectPref">Выбрать теги</label>-->
-        <!--<select class="custom-select my-1 mr-sm-2" id="inlineFormCustomSelectPref">-->
-          <!--<option value="1">One</option>-->
-          <!--<option value="2">Two</option>-->
-          <!--<option value="3">Three</option>-->
-        <!--</select>-->
+      <!--<label class="my-1 mr-2 text-blue" for="inlineFormCustomSelectPref">Выбрать теги</label>-->
+      <!--<select class="custom-select my-1 mr-sm-2" id="inlineFormCustomSelectPref">-->
+      <!--<option value="1">One</option>-->
+      <!--<option value="2">Two</option>-->
+      <!--<option value="3">Three</option>-->
+      <!--</select>-->
 
-        <!--<button type="submit" class="btn btn-primary my-1 btn-tags">Показать</button>-->
+      <!--<button type="submit" class="btn btn-primary my-1 btn-tags">Показать</button>-->
       <!--</form>-->
 
       <div class="profile">
@@ -55,31 +56,31 @@
 <script>
 
 
-export default {
-  name: 'app',
-  data() {
-    return {
-    }
-  },
+  export default {
+    name: 'app',
+    data() {
+      return {
+      }
+    },
 
-  watch: {
-    '$store.state.userData.loginSuccess': function () {
-      if (this.$store.state.userData.loginSuccess) {
-        console.log('33.L');
-        document.querySelector('.avatar').src = localStorage.AVATAR;
+    watch: {
+      '$store.state.userData.loginSuccess': function () {
+        if (this.$store.state.userData.loginSuccess) {
+          console.log('33.L');
+          document.querySelector('.avatar').src = localStorage.AVATAR;
+        }
+      }
+    },
+
+    methods: {
+      setAvatar(e) {
+        const fileImg = e.target.files[0];
+        const img = URL.createObjectURL(fileImg);
+        document.querySelector('.avatar').src = img;
+        localStorage.AVATAR = img;
       }
     }
-  },
-
-  methods: {
-    setAvatar(e) {
-      const fileImg = e.target.files[0];
-      const img = URL.createObjectURL(fileImg);
-      document.querySelector('.avatar').src = img;
-      localStorage.AVATAR = img;
-    }
   }
-}
 </script>
 
 
