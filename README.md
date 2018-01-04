@@ -1,4 +1,4 @@
-# my-project
+# fast
 
 > A Vue.js project
 
