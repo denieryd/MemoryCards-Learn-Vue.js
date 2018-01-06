@@ -8,10 +8,12 @@ export default new Vuex.Store({
     modePage: '',
 
     userData: {
-      headerEmail: 'Anonymous@mail.ru',
-      loginSuccess: false,
-      uidUser: false,
-      countCards: 0,
+      headerEmail: 'Anonim@mail.ru',
+      Name: 'Anonim',
+      LoginSuccess: false,
+      UidUser: false,
+      CountCards: 0,
+      Avatar: 'https://www.appointbetterboards.co.nz/Custom/Appoint/img/avatar-large.png'
     },
 
     animated: {
@@ -27,8 +29,11 @@ export default new Vuex.Store({
     setUserData(state, objDataUser) {
       state.userData = objDataUser;
     },
-    setAnimation(state, objData) {
-      state.animated = objData;
+    setAvatar(state, fileAvatar) {
+      state.userData.Avatar = fileAvatar;
+    },
+    updateCountCards(state, intCountCards) {
+      state.userData.CountCards = intCountCards;
     }
   }
 });

@@ -3,12 +3,13 @@
 
     <div class="saidbar-controls">
 
-      <router-link :to="{name: 'Auth', params: {modePage: 'Sign'}}" class="btn btn-outline-primary btn-router" tag="button" >
+
+      <router-link :to="{name: 'Auth', params: {modePage: 'Sign'}}" class="btn btn-outline-success btn-router" tag="button" >
         <i class="fa fa-sign-in" aria-hidden="true"></i>
         <span class="text-router">Войти</span>
       </router-link>
 
-      <router-link :to="{name: 'Auth', params: {modePage: 'Registration'}}" class="btn btn-outline-primary btn-router" tag="button" >
+      <router-link :to="{name: 'Auth', params: {modePage: 'Registration'}}" class="btn btn-outline-success btn-router" tag="button" >
         <i class="fa fa-user-plus" aria-hidden="true"></i>
         <span class="text-router">Зарегистрироваться</span>
       </router-link>
@@ -30,16 +31,18 @@
       <!--</form>-->
 
       <div class="profile">
+        <i v-if="$route.name === 'Content'" @click="toggleMoveBar" class="fa fa-arrow-circle-left toggle-bar" aria-hidden="true"></i>
         <div class="profile-avatar">
-          <img src="https://www.appointbetterboards.co.nz/Custom/Appoint/img/avatar-large.png"  alt="avatar" class="avatar">
+          <img :src=this.$store.state.userData.Avatar  alt="avatar" class="avatar">
         </div>
         <div class="profile-info">
           <hr class="profile-hr">
-          <span class="info-text">Ваш ник: <span class="text-green"> {{$store.state.userData.headerEmail.replace('@mail.ru', '') }}</span></span>
-          <span class="info-text">Всего карточек: <span class="text-green"> {{ $store.state.userData.countCards }}</span></span>
-          <form>
+          <span class="info-text">Ваш ник: <span class="text-green"> {{ this.$store.state.userData.Name }}</span></span>
+          <span class="info-text">Всего карточек: <span class="text-green"> {{ this.$store.state.userData.CountCards }}</span></span>
+
+          <form class="mt-1">
             <div class="form-group">
-              <label for="exampleFormControlFile1">Example file input</label>
+              <label for="exampleFormControlFile1">Выбрать аватар</label>
               <input type="file" class="form-control-file" id="exampleFormControlFile1" @change="setAvatar" accept="image/*">
             </div>
           </form>
@@ -55,37 +58,52 @@
 
 <script>
 
+  import * as firebase from 'firebase'
 
   export default {
     name: 'app',
     data() {
       return {
+        barMoved: false
       }
     },
 
+    created() {
+      console.log(this.$route);
+    },
     watch: {
-      '$store.state.userData.loginSuccess': function () {
-        if (this.$store.state.userData.loginSuccess) {
-          console.log('33.L');
-          document.querySelector('.avatar').src = localStorage.AVATAR;
-        }
+      '$store.state.userData.LoginSuccess': function () {
+
       }
     },
 
     methods: {
-      setAvatar(e) {
+      toggleMoveBar(e) {
+        document.querySelector('.saidbar-controls').classList.toggle('saidbar-move');
+        e.target.classList.toggle('toggle-bar-anim');
+      },
+
+      setAvatar (e) {
         const fileImg = e.target.files[0];
-        const img = URL.createObjectURL(fileImg);
-        document.querySelector('.avatar').src = img;
-        localStorage.AVATAR = img;
-      }
+        const reader  = new FileReader();
+        const _this = this;
+
+        reader.onloadend = function () {
+          console.log('end');
+          _this.$store.commit('setAvatar', reader.result);
+          firebase.database().ref().child(`/${_this.$store.state.userData.UidUser}/SettingsUser`)
+            .update({ Avatar: reader.result});
+        };
+
+        reader.readAsDataURL(fileImg);
+      },
+
     }
   }
 </script>
 
 
 <style>
-
 
   .fa {
     margin-right: 20px;
@@ -112,13 +130,13 @@
 
   #app {
     display: grid;
-    grid-template-columns: 0.9fr 4fr;
+    grid-template-columns: 1fr 150fr;
     grid-template-rows: 1fr;
-
     height: 100vh;
-
     font-weight: 600;
   }
+
+
 
 
   .saidbar-controls {
@@ -131,8 +149,30 @@
     background: -webkit-linear-gradient(to top, #29323c, #485563);  /* Chrome 10-25, Safari 5.1-6 */
     background: linear-gradient(to top, #29323c, #485563); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
 
-
+    transition: 1s linear;
   }
+
+  .saidbar-move {
+    margin-left: -280px;
+  }
+
+  .toggle-bar-anim {
+    transform: rotate(180deg);
+  }
+
+  .toggle-bar {
+    cursor: pointer;
+    position: absolute;
+    top: -18.5%;
+    right: -20%;
+    margin-right: 0;
+    font-size: 40px;
+    color: white;
+
+    transition: 0.5s linear;
+  }
+
+
 
   .form-inline {
     margin: auto 15px;
@@ -152,12 +192,9 @@
   }
 
   .profile {
-    display: grid;
-    grid-template-rows: 1fr 1fr;
-    grid-template-columns: 1fr;
+    position: relative;
 
-
-    margin: auto 15px;
+    margin: 30px 15px;
     padding: 5px;
 
     border: 2px solid crimson;

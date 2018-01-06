@@ -5,8 +5,8 @@
         <div class="section__main-auth animated rollIn">
           <h2 class="main-auth__title text-effect-shadow">{{ $store.state.modePage === 'Sign' ? 'Sign to memca' : 'Join to memca' }}</h2>
           <form class="main-auth__form" @submit.prevent="authorization">
-            <label for="login">Email</label>
-            <input type="text" class="margin-bot-md" v-model="userData.email" id="login" placeholder="example@mail.ru" required autofocus>
+            <label for="login">Name</label>
+            <input type="text" class="margin-bot-md" v-model="userData.login" id="login" placeholder="example@mail.ru" required autofocus>
             <label for="password">Password</label>
             <input type="password" class="margin-bot-md" id="password" v-model="userData.pass" required>
 
@@ -41,7 +41,7 @@
         messageError: '',
 
         userData: {
-          email: '',
+          login: '',
           pass: ''
         },
         restoreDataLogin: true
@@ -52,12 +52,20 @@
       this.setModePage();
     },
     watch: {
-      '$route': 'setModePage',
+      '$route': 'setModePage' ,
+      // SET ANIM
     },
     methods: {
       setModePage() {
         this.modePage = this.$route.params.modePage;
         this.$store.commit('setModePage', this.$route.params.modePage);
+      },
+
+      startAnim() {
+        document.querySelector('.section__main-auth').classList.add('animated', 'rollIn');
+        setTimeout(() => {
+          document.querySelector('.section__main-auth').classList.remove('animated', 'rollIn');
+        }, 1000)
       },
 
       getAnotherPage () {
@@ -72,10 +80,21 @@
 
       authorization() {
         if (this.modePage === 'Registration') {
-          firebase.auth().createUserWithEmailAndPassword(this.userData.email, this.userData.pass)
-            .then(() => {
-              let path = {name: 'Auth', params: {mode: 'Sign'}};
+          firebase.auth().createUserWithEmailAndPassword(this.userData.login + '@mail.ru', this.userData.pass)
+            .then((response) => {
+              let path = {name: 'Auth', params: {'modePage': 'Sign'}};
               this.$router.push(path);
+
+              let settUser = {
+                Avatar: 'https://www.appointbetterboards.co.nz/Custom/Appoint/img/avatar-large.png',
+                Name: response.email.replace('@mail.ru', ''),
+                CountCards: 0
+              };
+
+              firebase.database().ref(response.uid + '/' + 'SettingsUser').set(settUser);
+
+              this.errorsAuth = false;
+              this.messageError = '';
             })
             .catch((error) => {
               this.errorsAuth = true;
@@ -87,23 +106,36 @@
       },
 
       signIn() {
-        firebase.auth().signInWithEmailAndPassword(this.userData.email, this.userData.pass)
+        firebase.auth().signInWithEmailAndPassword(this.userData.login + '@mail.ru', this.userData.pass)
           .then((response) => {
             let userData = {
-              headerEmail: response.email,
-              uidUser: response.uid,
-              loginSuccess: true,
-              countCards: 0,
+              HeaderEmail: response.email,
+              UidUser: response.uid,
+              LoginSuccess: true,
             };
-            this.$store.commit('setUserData', userData);
+
 
             if (this.restoreDataLogin) {
-              this.saveDataAuthUser(this.userData.email, this.userData.pass)
+              this.saveDataAuthUser(this.userData.login, this.userData.pass)
             } else {
-              localStorage.email = null;
+              localStorage.login = null;
               localStorage.pass = null;
             }
-            this.$router.push({name: 'Content'})
+
+            const _this = this;
+            firebase.database().ref(`/${response.uid}/SettingsUser`).once('value').then((snapshot) => {
+              getAboutUser(snapshot.val());
+
+              function getAboutUser(user) {
+                userData.Name = user.Name;
+                userData.Avatar = user.Avatar;
+                userData.CountCards = user.CountCards;
+
+                _this.$store.commit('setUserData', userData);
+                _this.$router.push({name: 'Content'})
+              }
+            });
+
           })
           .catch((error) => {
             this.errorsAuth = true;
@@ -111,14 +143,14 @@
           })
       },
 
-      saveDataAuthUser(email, pass) {
-        localStorage.email = email;
+      saveDataAuthUser(login, pass) {
+        localStorage.login = login;
         localStorage.pass = pass;
       },
 
       recallLoginData() {
-        if (localStorage.email !== undefined && localStorage.pass !== undefined) {
-          this.userData.email = localStorage.email;
+        if (localStorage.login !== undefined && localStorage.pass !== undefined) {
+          this.userData.login = localStorage.login;
           this.userData.pass = localStorage.pass;
           this.restoreDataLogin = true;
         }

@@ -1,13 +1,15 @@
 <template>
   <div class="wrap">
-    <div class="animation-banner animated flipInX">
-      <i class="fa fa-bell" aria-hidden="true"></i>
-      <span class="banner-text">
+    <div class="animation-banner animated hidden">
+      <div class="banner-content">
+        <i class="fa fa-bell" aria-hidden="true"></i>
+        <span class="banner-text">
         {{ bannerText }}
       </span>
+      </div>
     </div>
 
-    <form class="setting-card">
+    <form class="setting-card" @submit.prevent="addCard">
 
       <div class="inputs-card">
         <div class="form-group">
@@ -19,29 +21,26 @@
         </div>
       </div>
 
-      <button type="submit" class="btn btn-outline-warning btn-lg btn-create-card" @click.prevent="addNote"> Создать карточку </button>
+      <button type="submit" class="btn btn-outline-warning btn-lg btn-create-card"> Создать карточку </button>
     </form>
-
 
     <div class="main-content">
       <hr>
 
-
-      <div class="help-banner-content" v-if="!$store.state.userData.loginSuccess">
+      <div class="help-banner-content" v-if="!$store.state.userData.LoginSuccess">
         <span class="text-secondary"> Для получение карточек,вам нужно авторизоваться </span>
       </div>
-
 
       <div class="content-cards">
 
         <div class="card text-white bg-dark mb-3" style="max-width: 18rem;" v-for="card in listCards">
           <div class="card-header">
-            <span>Карта #1</span>
+            <span>Карточка</span>
             <button type="button" class="btn btn-outline-warning" @click="deleteCard($event, card.timeStamp)">Удалить карту</button>
           </div>
           <div class="card-body">
-            <h5 class="card-title">{{ card.QuestionCard }}</h5>
-            <p class="card-text hidden"> {{ card.AnswerCard }}</p>
+            <h5 class="card-title"> {{ card.QuestionCard }}</h5>
+            <p class="card-text hidden"> <mark> {{ card.AnswerCard }} </mark></p>
             <button type="button" class="btn btn-outline-success" @click="toggleAnswer">Показать ответ</button>
           </div>
         </div>
@@ -72,64 +71,71 @@
       const wow = new WOW();
       wow.init();
       this.getContent();
-      this.test();
     },
 
+
     methods: {
-
-      test() {
-        setTimeout(() => {
-          console.log('r');
-          document.querySelector('.animation-banner').classList.remove('flipInX');
-          document.querySelector('.animation-banner').classList.add('flipOutX');
-
-        }, 2500)
-      },
-
       toggleAnswer(e) {
         e.target.previousElementSibling.classList.toggle('hidden');
       },
 
-      addNote (e) {
-        if (this.$store.state.userData.uidUser) {
-          let timeStamp = new Date().getTime();
-          let card = {
+      addCard (e) {
+        if (this.$store.state.userData.UidUser) {
+          const timeStamp = new Date().getTime();
+          const card = {
             QuestionCard: this.QuestionCard,
             AnswerCard: this.AnswerCard,
             timeStamp
           };
           this.listCards.push(card);
 
-          let path = this.$store.state.userData.uidUser;
+          const UidUser = this.$store.state.userData.UidUser;
+          const countCards = parseInt(this.$store.state.userData.CountCards) + 1;
+          firebase.database().ref(`${UidUser}/Content/${timeStamp}`).set(card)
+            .then(() => {
+              firebase.database().ref().child(`/${this.$store.state.userData.UidUser}/SettingsUser`)
+                .update({ CountCards: countCards})
+                .then(() => {
+                  this.$store.commit('updateCountCards', countCards);
+                });
+            });
 
-          firebase.database().ref(path + '/' + timeStamp).set(card);
           this.QuestionCard = '';
           this.AnswerCard = '';
         } else {
-          alert('Сначала рег и вход');
+          this.runAnimAuth();
         }
       },
 
       deleteCard (e, timeStamp) {
-        if (this.$store.state.userData.uidUser) {
-          firebase.database().ref(`${this.$store.state.userData.uidUser}/${timeStamp}`).remove();
-          e.target.parentNode.parentNode.remove();
+        if (this.$store.state.userData.UidUser) {
+          const countCards = parseInt(this.$store.state.userData.CountCards) - 1;
+
+          firebase.database().ref(`${this.$store.state.userData.UidUser}/Content/${timeStamp}`).remove()
+            .then(() => {
+              firebase.database().ref().child(`/${this.$store.state.userData.UidUser}/SettingsUser`)
+                .update({ CountCards: countCards})
+                .then(() => {
+                  this.$store.commit('updateCountCards', countCards);
+                });
+              e.target.parentNode.parentNode.remove();
+            });
         }
       },
 
       getContent() {
-        if (this.$store.state.userData.uidUser) {
+        if (this.$store.state.userData.UidUser) {
         this.listCards = [];
-        let path = this.$store.state.userData.uidUser;
+        let UidUser = this.$store.state.userData.UidUser;
 
-          firebase.database().ref('/' + path).once('value').then((snapshot) => {
+          firebase.database().ref(`/${UidUser}/Content/`).once('value').then((snapshot) => {
             getNotes(snapshot.val())
           });
-          const that = this;
+          const _this = this;
 
           function getNotes(card) {
             for (let key in card) {
-              that.listCards.push({
+              _this.listCards.push({
                 QuestionCard: card[key].QuestionCard,
                 AnswerCard: card[key].AnswerCard,
                 timeStamp: card[key].timeStamp,
@@ -137,8 +143,20 @@
             }
           }
         }
-      }
+      },
 
+      runAnimAuth() {
+        document.querySelector('.animation-banner').classList.remove('hidden');
+        document.querySelector('.animation-banner').classList.add('flipInX');
+        setTimeout(() => {
+          document.querySelector('.animation-banner').classList.add('flipOutX');
+          setTimeout(() => {
+            document.querySelector('.animation-banner').classList.remove('flipOutX');
+            document.querySelector('.animation-banner').classList.remove('flipInX');
+            document.querySelector('.animation-banner').classList.add('hidden');
+          }, 1000);
+        }, 2500)
+      },
 
     }
   }
@@ -155,16 +173,14 @@
     box-shadow: 1px 3px 19px -12px #000000;
   }
 
-  .hidden {
-    display: none;
-  }
 
   .animation-banner {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
 
-    position: absolute;
+    position: fixed;
+    width: 100%;
     height: 8%;
     top: 0;
     margin: 0;
@@ -176,9 +192,10 @@
     background: rgba(139,197,65, 1);
   }
 
-  .banner-text {
-    margin-left: 15px;
+  .banner-content {
+    margin-left: 25%;
   }
+
 
   .help-banner-content {
     display: flex;
@@ -189,6 +206,10 @@
     font-size: 35px;
     font-weight: bold;
 
+  }
+
+  .hidden {
+    display: none;
   }
 
 
