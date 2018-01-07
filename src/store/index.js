@@ -19,7 +19,9 @@ export default new Vuex.Store({
     animated: {
       run: true,
       textBanner: '321'
-    }
+    },
+
+    categoryCards: ['Обычная']
 
   },
   mutations: {

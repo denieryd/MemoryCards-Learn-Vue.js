@@ -2,44 +2,48 @@
   <div id="app">
 
     <div class="saidbar-controls">
+      <i v-if="$route.name === 'Content'" @click="toggleMoveBar" class="fa fa-arrow-circle-up toggle-bar" aria-hidden="true"></i>
 
-
-      <router-link :to="{name: 'Auth', params: {modePage: 'Sign'}}" class="btn btn-outline-success btn-router" tag="button" >
+      <router-link :to="{name: 'Auth', params: {modePage: 'Sign'}}" v-if="!$store.state.userData.LoginSuccess" class="btn btn-outline-success btn-router animated zoomInRight" tag="button" >
         <i class="fa fa-sign-in" aria-hidden="true"></i>
         <span class="text-router">Войти</span>
       </router-link>
 
-      <router-link :to="{name: 'Auth', params: {modePage: 'Registration'}}" class="btn btn-outline-success btn-router" tag="button" >
+      <router-link :to="{name: 'Auth', params: {modePage: 'Registration'}}" v-if="!$store.state.userData.LoginSuccess" class="btn btn-outline-success btn-router animated zoomInRight" tag="button" >
         <i class="fa fa-user-plus" aria-hidden="true"></i>
         <span class="text-router">Зарегистрироваться</span>
       </router-link>
 
-      <router-link :to="{name: 'Content'}" class="btn btn-outline-success btn-router" tag="button" >
+      <button v-if="$store.state.userData.LoginSuccess" @click="logOut" class="btn btn-outline-success btn-router animated zoomInRight">
+        <i class="fa fa-sign-out" aria-hidden="true"></i>
+        <span class="text-router">Выйти</span>
+      </button>
+
+      <router-link :to="{name: 'Content'}" v-if="!$store.state.userData.LoginSuccess" class="btn btn-outline-success btn-router animated zoomInRight" tag="button" >
         <i class="fa fa-home" aria-hidden="true"></i>
         <span class="text-router">Главная</span>
       </router-link>
 
-      <!--<form class="form-inline">-->
-      <!--<label class="my-1 mr-2 text-blue" for="inlineFormCustomSelectPref">Выбрать теги</label>-->
-      <!--<select class="custom-select my-1 mr-sm-2" id="inlineFormCustomSelectPref">-->
-      <!--<option value="1">One</option>-->
-      <!--<option value="2">Two</option>-->
-      <!--<option value="3">Three</option>-->
-      <!--</select>-->
+      <form class="form-inline box-choos-tag" v-if="$store.state.userData.LoginSuccess">
+        <select class="custom-select" id="inlineFormCustomSelectPref">
+          <option selected disabled>Выбрать категорию</option>
+          <option v-for="tag of cardTags"> {{ tag}} </option>
+        </select>
 
-      <!--<button type="submit" class="btn btn-primary my-1 btn-tags">Показать</button>-->
-      <!--</form>-->
+        <button type="submit" class="btn btn-primary my-1 btn-tags">Показать</button>
+      </form>
 
-      <div class="profile">
-        <i v-if="$route.name === 'Content'" @click="toggleMoveBar" class="fa fa-arrow-circle-left toggle-bar" aria-hidden="true"></i>
+      <div class="profile animated zoomInDown">
         <div class="profile-avatar">
           <img :src=this.$store.state.userData.Avatar  alt="avatar" class="avatar">
         </div>
         <div class="profile-info">
           <hr class="profile-hr">
+
           <span class="info-text">Ваш ник: <span class="text-green"> {{ this.$store.state.userData.Name }}</span></span>
           <span class="info-text">Всего карточек: <span class="text-green"> {{ this.$store.state.userData.CountCards }}</span></span>
 
+          <hr class="profile-hr">
           <form class="mt-1">
             <div class="form-group">
               <label for="exampleFormControlFile1">Выбрать аватар</label>
@@ -64,20 +68,39 @@
     name: 'app',
     data() {
       return {
-        barMoved: false
+        barMoved: false,
+        loginSucces: false,
+        cardTags: ['Обычная']
       }
     },
 
     created() {
-      console.log(this.$route);
+      if (localStorage.getItem('USERDATA') !== null && localStorage.getItem('USERDATA') !== undefined) {
+        this.$store.commit('setUserData', JSON.parse(localStorage.getItem('USERDATA')));
+      }
     },
     watch: {
       '$store.state.userData.LoginSuccess': function () {
-
+        this.loginSucces = this.$store.state.userData.LoginSuccess;
       }
     },
 
     methods: {
+
+      logOut() {
+        const defSettUser = {
+          headerEmail: 'Anonim@mail.ru',
+          Name: 'Anonim',
+          LoginSuccess: false,
+          UidUser: false,
+          CountCards: 0,
+          Avatar: 'https://www.appointbetterboards.co.nz/Custom/Appoint/img/avatar-large.png'
+        };
+
+        this.$store.commit('setUserData', defSettUser);
+        localStorage.removeItem('USERDATA');
+      },
+
       toggleMoveBar(e) {
         document.querySelector('.saidbar-controls').classList.toggle('saidbar-move');
         e.target.classList.toggle('toggle-bar-anim');
@@ -89,7 +112,6 @@
         const _this = this;
 
         reader.onloadend = function () {
-          console.log('end');
           _this.$store.commit('setAvatar', reader.result);
           firebase.database().ref().child(`/${_this.$store.state.userData.UidUser}/SettingsUser`)
             .update({ Avatar: reader.result});
@@ -105,13 +127,18 @@
 
 <style>
 
+  html {
+    overflow: hidden;
+    font-size: 10px;
+  }
+
   .fa {
     margin-right: 20px;
-    font-size: 20px;
+    font-size: 2rem;
   }
 
   .text-router {
-    font-size: 20px;
+    font-size: 2rem;
   }
 
   .btn-router {
@@ -119,13 +146,13 @@
     justify-content: center;
     align-items: center;
 
+    min-width: 250px;
     margin: 15px;
   }
 
   .text-green {
     color: green;
   }
-
 
 
   #app {
@@ -137,9 +164,8 @@
   }
 
 
-
-
   .saidbar-controls {
+    position: relative;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
@@ -149,7 +175,7 @@
     background: -webkit-linear-gradient(to top, #29323c, #485563);  /* Chrome 10-25, Safari 5.1-6 */
     background: linear-gradient(to top, #29323c, #485563); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
 
-    transition: 1s linear;
+    transition: 0.5s linear;
   }
 
   .saidbar-move {
@@ -163,27 +189,32 @@
   .toggle-bar {
     cursor: pointer;
     position: absolute;
-    top: -18.5%;
-    right: -20%;
+    top: 2%;
+    right: -12.5%;
     margin-right: 0;
-    font-size: 40px;
+    font-size: 4rem;
     color: white;
 
     transition: 0.5s linear;
   }
 
-
-
   .form-inline {
-    margin: auto 15px;
+    font-size: 2rem;
   }
 
-  .btn-tags {
-    margin-top: 5px;
+  .form-inline button {
+    margin: 15px;
+    margin-top: 20px;
+    font-size: 2rem;
+  }
+
+  .custom-select {
+    margin: 15px;
+    height: auto;
   }
 
   .content {
-    overflow-y:scroll;
+    overflow-y: scroll;
 
     background: #2C3E50;  /* fallback for old browsers */
     background: -webkit-linear-gradient(to top, #4CA1AF, #2C3E50);  /* Chrome 10-25, Safari 5.1-6 */
@@ -192,10 +223,10 @@
   }
 
   .profile {
-    position: relative;
-
     margin: 30px 15px;
     padding: 5px;
+
+    font-size: 1.6rem;
 
     border: 2px solid crimson;
     border-radius: 2%;
@@ -240,9 +271,5 @@
   .info-text {
     font-weight: 700;
   }
-
-
-
-
 
 </style>

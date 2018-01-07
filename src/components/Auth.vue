@@ -6,14 +6,9 @@
           <h2 class="main-auth__title text-effect-shadow">{{ $store.state.modePage === 'Sign' ? 'Sign to memca' : 'Join to memca' }}</h2>
           <form class="main-auth__form" @submit.prevent="authorization">
             <label for="login">Name</label>
-            <input type="text" class="margin-bot-md" v-model="userData.login" id="login" placeholder="example@mail.ru" required autofocus>
+            <input type="text" class="margin-bot-md" v-model="userData.login" id="login" required autofocus>
             <label for="password">Password</label>
             <input type="password" class="margin-bot-md" id="password" v-model="userData.pass" required>
-
-            <div class="custom-control custom-checkbox my-1 mr-sm-2" v-if="$store.state.modePage === 'Sign'">
-              <input type="checkbox" class="custom-control-input" id="customControlInline" v-model="restoreDataLogin">
-              <label class="custom-control-label" for="customControlInline">Запомнить данные</label>
-            </div>
 
             <div class="alert alert-danger margin-bot-lg" role="alert" v-if="errorsAuth">
               {{ messageError }}
@@ -43,8 +38,8 @@
         userData: {
           login: '',
           pass: ''
-        },
-        restoreDataLogin: true
+        }
+
       }
     },
     created() {
@@ -52,8 +47,7 @@
       this.setModePage();
     },
     watch: {
-      '$route': 'setModePage' ,
-      // SET ANIM
+      '$route': 'setModePage'
     },
     methods: {
       setModePage() {
@@ -80,6 +74,7 @@
 
       authorization() {
         if (this.modePage === 'Registration') {
+          console.log('auth');
           firebase.auth().createUserWithEmailAndPassword(this.userData.login + '@mail.ru', this.userData.pass)
             .then((response) => {
               let path = {name: 'Auth', params: {'modePage': 'Sign'}};
@@ -106,33 +101,28 @@
       },
 
       signIn() {
+        const _this = this;
         firebase.auth().signInWithEmailAndPassword(this.userData.login + '@mail.ru', this.userData.pass)
           .then((response) => {
-            let userData = {
+            let newUserData = {
               HeaderEmail: response.email,
               UidUser: response.uid,
               LoginSuccess: true,
             };
 
+            this.saveDataAuthUser(this.userData.login, this.userData.pass);
 
-            if (this.restoreDataLogin) {
-              this.saveDataAuthUser(this.userData.login, this.userData.pass)
-            } else {
-              localStorage.login = null;
-              localStorage.pass = null;
-            }
-
-            const _this = this;
             firebase.database().ref(`/${response.uid}/SettingsUser`).once('value').then((snapshot) => {
               getAboutUser(snapshot.val());
 
               function getAboutUser(user) {
-                userData.Name = user.Name;
-                userData.Avatar = user.Avatar;
-                userData.CountCards = user.CountCards;
+                newUserData.Name = user.Name;
+                newUserData.Avatar = user.Avatar;
+                newUserData.CountCards = user.CountCards;
 
-                _this.$store.commit('setUserData', userData);
-                _this.$router.push({name: 'Content'})
+                _this.$store.commit('setUserData', newUserData);
+                _this.$router.push({name: 'Content'});
+                localStorage.setItem('USERDATA', JSON.stringify(newUserData));
               }
             });
 
@@ -144,14 +134,14 @@
       },
 
       saveDataAuthUser(login, pass) {
-        localStorage.login = login;
-        localStorage.pass = pass;
+        localStorage.setItem('login', login);
+        localStorage.setItem('pass', pass);
       },
 
       recallLoginData() {
-        if (localStorage.login !== undefined && localStorage.pass !== undefined) {
-          this.userData.login = localStorage.login;
-          this.userData.pass = localStorage.pass;
+        if (localStorage.login && localStorage.pass) {
+          this.userData.login = localStorage.getItem('login');
+          this.userData.pass = localStorage.getItem('pass');
           this.restoreDataLogin = true;
         }
       }
@@ -227,6 +217,7 @@
 
     padding: 20px;
     margin: 15px 0;
+    font-size: 1.7rem;
 
     border: 1px solid #d8dee2;
     border-radius: 5px;
@@ -235,10 +226,10 @@
   }
 
   .main-auth__title {
+    font-size: 3.2rem;
     color: darksalmon;
     text-align: center;
   }
-
 
   .main-auth__form input {
     min-height: 34px;
@@ -248,13 +239,16 @@
     border: 1px solid #d1d5da;
     border-radius: 3px;
   }
+
   .main-auth__form label {
     margin-bottom: 3px;
   }
+
   .main-auth__form label, .main-auth__form input {
     display: block;
     width: 100%;
   }
+
   .main-auth__form .secondary-controls {
     display: -webkit-box;
     display: -ms-flexbox;
@@ -269,8 +263,6 @@
     align-items: center;
   }
 
-
-
   .main-auth__footer {
     display: -webkit-box;
     display: -ms-flexbox;
@@ -279,7 +271,7 @@
 
     width: 100%;
     padding: 13px 15px;
-    font-size: 14px;
+    font-size: 1.5rem;
 
     border: 1px solid #d8dee2;
     border-radius: 5px;
@@ -292,6 +284,7 @@
     width: 100%;
     margin-left: auto;
     min-height: 35px;
+    font-size: 1.5rem;
 
     border-radius: 3px;
     border: 0;
@@ -316,12 +309,13 @@
     transform-origin: 50% 50%;
   }
 
-  .form__btn-submit:hover, form__btn-submit:active, form__btn-submit:focus {
+  .form__btn-submit:hover {
     background: #2bbbae;
   }
 
   .form__btn-submit:focus:not(:active)::after {
     animation: ripple 0.8s ease-out;
   }
+
 
 </style>
