@@ -25,6 +25,11 @@ export default new Vuex.Store({
 
   },
   mutations: {
+    updateCardTags(state, addedCardTag) {
+      if (!state.categoryCards.includes(addedCardTag)) {
+        state.categoryCards.push(addedCardTag);
+      }
+    },
     setModePage(state, strValue) {
       state.modePage = strValue;
     },

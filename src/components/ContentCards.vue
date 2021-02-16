@@ -105,6 +105,7 @@
             categoryCard
           };
           this.listCards.push(card);
+          this.$store.commit('updateCardTags', categoryCard);
 
           const UidUser = this.$store.state.userData.UidUser;
           const countCards = parseInt(this.$store.state.userData.CountCards) + 1;
@@ -151,17 +152,14 @@
           });
           const _this = this;
 
-          function getNotes(card) {
-            for (let key in card) {
+          function getNotes(cards) {
+            for (let card in cards) {
               _this.listCards.push({
-                QuestionCard: card[key].QuestionCard,
-                AnswerCard: card[key].AnswerCard,
-                timeStamp: card[key].timeStamp,
+                QuestionCard: cards[card].QuestionCard,
+                AnswerCard: cards[card].AnswerCard,
+                timeStamp: cards[card].timeStamp,
               });
-              // ne dodelal
-              if (_this.categoryCards.indexOf(card[key].categoryCard === -1)) {
-                _this.categoryCards.push(card[key].categoryCard);
-              }
+            _this.$store.commit('updateCardTags', cards[card].categoryCard)
             }
           }
 

@@ -74,7 +74,6 @@
 
       authorization() {
         if (this.modePage === 'Registration') {
-          console.log('auth');
           firebase.auth().createUserWithEmailAndPassword(this.userData.login + '@mail.ru', this.userData.pass)
             .then((response) => {
               let path = {name: 'Auth', params: {'modePage': 'Sign'}};

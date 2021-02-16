@@ -84,6 +84,9 @@
     watch: {
       '$store.state.userData.LoginSuccess': function () {
         this.loginSucces = this.$store.state.userData.LoginSuccess;
+      },
+      '$store.state.categoryCards': function () {
+        this.cardTags = this.$store.state.categoryCards;
       }
     },
 
