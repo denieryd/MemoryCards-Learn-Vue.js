@@ -30,5 +30,3 @@ npm run dev
 ![alt_text](./images/app_scr3.png)
 
 ![alt_text](./images/app_scr4.png)
-
-For a detailed explanation on how things work, check out the [guide](http://vuejs-templates.github.io/webpack/) and [docs for vue-loader](http://vuejs.github.io/vue-loader).
